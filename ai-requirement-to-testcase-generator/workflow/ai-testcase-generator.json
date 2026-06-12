@@ -1,0 +1,256 @@
+{
+  "name": "AI-Driven Requirement to Test Case Generator using n8n & Gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1_qBfUyWH4yyeYn8bTT3Bghllfi_C14zIb14WMliWqL8",
+          "mode": "list",
+          "cachedResultName": "AI QA Test Case Generator",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_qBfUyWH4yyeYn8bTT3Bghllfi_C14zIb14WMliWqL8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_qBfUyWH4yyeYn8bTT3Bghllfi_C14zIb14WMliWqL8/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -32
+      ],
+      "id": "61e96f00-f237-4269-8670-f06031fa375d",
+      "name": "Google Sheets Trigger",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "3kfev382ex1Yjq6U",
+          "name": "Google Sheets Trigger OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Senior QA Engineer.\n\nGenerate exactly 5 test cases.\n\nRequirement:\n{{$json[\"Requirement Description\"]}}\n\nReturn ONLY JSON in this format:\n\n[\n  {\n    \"Test Case ID\": \"TC001\",\n    \"Prerequisites\": \"User is on registration page\",\n    \"Test Steps\": \"Enter valid mobile number, click Send OTP, enter valid OTP\",\n    \"Expected Result\": \"Registration successful\",\n    \"Actual Result\": \"\"\n  }\n]\n\nDo not return markdown.\nDo not return explanations.\nReturn JSON only.",
+        "options": {
+          "systemMessage": "=You are a Senior QA Engineer.\n\nGenerate exactly 5 test cases.\n\nRequirement:\n{{$json[\"Requirement Description\"]}}\n\nReturn ONLY JSON in this format:\n\n[\n  {\n    \"Test Case ID\": \"TC001\",\n    \"Prerequisites\": \"User is on registration page\",\n    \"Test Steps\": \"Enter valid mobile number, click Send OTP, enter valid OTP\",\n    \"Expected Result\": \"Registration successful\",\n    \"Actual Result\": \"\"\n  }\n]\n\nDo not return markdown.\nDo not return explanations.\nReturn JSON only."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -128,
+        -32
+      ],
+      "id": "5bbf44e0-1c96-4de5-8a35-b2e0d75e16f8",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        176
+      ],
+      "id": "14ff57c2-2ae5-4a3c-98d3-acb78322080e",
+      "name": "Google Gemini Chat Model",
+      "notesInFlow": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "MExBbyhpY4VyyBuj",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawOutput = $json.output;\n\n// Remove ```json and ``` wrappers\nconst cleaned = rawOutput\n  .replace(/```json/g, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Convert string to JSON\nconst testCases = JSON.parse(cleaned);\n\n// Return one item per test case\nreturn testCases.map(tc => ({\n  json: {\n    testCaseId: tc[\"Test Case ID\"],\n    prerequisites: tc[\"Prerequisites\"],\n    testSteps: tc[\"Test Steps\"],\n    expectedResult: tc[\"Expected Result\"],\n    actualResult: tc[\"Actual Result\"]\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -32
+      ],
+      "id": "f6a729e1-2dcd-47a0-a23f-71882bbebe65",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1_qBfUyWH4yyeYn8bTT3Bghllfi_C14zIb14WMliWqL8",
+          "mode": "list",
+          "cachedResultName": "AI QA Test Case Generator",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_qBfUyWH4yyeYn8bTT3Bghllfi_C14zIb14WMliWqL8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1665284994,
+          "mode": "list",
+          "cachedResultName": "Generated Test Cases",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_qBfUyWH4yyeYn8bTT3Bghllfi_C14zIb14WMliWqL8/edit#gid=1665284994"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Test Case ID": "={{ $json.testCaseId }}",
+            "Prerequisites": "={{ $json.prerequisites }}",
+            "Test Steps": "={{ $json.testSteps }}",
+            "Expected Result": "={{ $json.expectedResult }}",
+            "Actual Result": "={{ $json.actualResult }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Test Case ID",
+              "displayName": "Test Case ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prerequisites",
+              "displayName": "Prerequisites",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Test Steps",
+              "displayName": "Test Steps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expected Result",
+              "displayName": "Expected Result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Actual Result",
+              "displayName": "Actual Result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        -32
+      ],
+      "id": "10fe4cfe-14eb-49fd-a7d0-3781f8085f1d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hE3nH9p0OTqnYSk9",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "41149985-cdc0-4391-914c-de41a56d7640",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2d8ea1b06a674fae93d3f6950adaee7e05f11d6b9b3d3d93362cb66f0960bfaa"
+  },
+  "nodeGroups": [],
+  "id": "DHhcpjtbltkza6H3",
+  "tags": []
+}
